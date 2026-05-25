@@ -1,0 +1,16 @@
+name: home_stock_mobile
+
+description: Home Stock Assistant mobile MVP
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  dio: ^5.7.0
+
+flutter:
+  uses-material-design: true
