@@ -16,10 +16,9 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
 ## 手機測試
-1. 安裝 Flutter App 到手機，並把 API_BASE_URL 指向 Render，例如 `https://home-stock-api.onrender.com`。
-2. 啟動時可用 `flutter run --dart-define=API_BASE_URL=https://home-stock-api.onrender.com`。
-3. 先註冊再登入，登入成功後再新增個人清單與家用清單。
-4. 如果你的 Render 網址不是這個網域，直接改成實際網址即可。
+1. 直接用手機瀏覽器開 Render 的主網址，例如 `https://home-stock-api-grzn.onrender.com/`。
+2. 先註冊再登入，登入成功後就能新增個人清單、家用清單，或建立家庭與加入成員。
+3. 如果你換成別的 Render 網址，頁面上的 API Base URL 會預設使用目前網址，也可以手動修改。
 
 ## 測試流程（對應你的需求）
 1. 建立主使用者 A、家人 B。
