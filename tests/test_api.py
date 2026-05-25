@@ -27,6 +27,16 @@ def test_family_and_personal_isolation():
 def test_siri_voice_add():
     t = token('c@test.com', 'C')
     h = {'Authorization': f'Bearer {t}'}
-    r = client.post('/voice/siri', json={'phrase': '阿猴鮮奶', 'list_type': 'personal'}, headers=h)
+    r = client.post('/voice/siri', json={'phrase': '幫我在管家紀錄要買阿猴鮮奶 2 個', 'list_type': 'personal'}, headers=h)
     assert r.status_code == 200
     assert r.json()['added'] == '牛奶'
+    assert r.json()['qty_needed'] == 2
+
+
+def test_oauth_config_and_unconfigured_start():
+    config = client.get('/auth/oauth/config').json()
+    assert set(config) == {'apple', 'line', 'google'}
+    r = client.get('/auth/oauth/apple/start')
+    assert r.status_code == 501
+    callback = client.get('/auth/oauth/google/callback')
+    assert callback.status_code == 501

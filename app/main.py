@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 from enum import Enum
+import re
 from typing import Optional
+from urllib.parse import urlencode
 
 from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -39,6 +41,12 @@ class Base(DeclarativeBase):
 class ListType(str, Enum):
     personal = "personal"
     family = "family"
+
+
+class OAuthProvider(str, Enum):
+    apple = "apple"
+    line = "line"
+    google = "google"
 
 
 class ItemStatus(str, Enum):
@@ -101,6 +109,36 @@ def normalize_name(name: str) -> str:
     return name.strip()
 
 
+CHINESE_NUMBERS = {
+    "一": 1,
+    "二": 2,
+    "兩": 2,
+    "三": 3,
+    "四": 4,
+    "五": 5,
+    "六": 6,
+    "七": 7,
+    "八": 8,
+    "九": 9,
+    "十": 10,
+}
+
+
+def parse_voice_item(phrase: str) -> tuple[str, int]:
+    text = phrase.strip()
+    text = re.sub(r"^(嘿\s*)?siri[，,\s]*", "", text, flags=re.IGNORECASE)
+    text = re.sub(r"^(幫我|請幫我|請)?(在)?(管家)?(紀錄|記錄|新增|加入)?(要買)?", "", text).strip()
+    match = re.search(r"(.+?)(?:\s*(\d+|[一二兩三四五六七八九十])\s*(個|瓶|包|盒|袋|顆|組|份)?)?$", text)
+    if not match:
+        return text, 1
+    name = match.group(1).strip(" ，,。")
+    qty_text = match.group(2)
+    if not qty_text:
+        return name, 1
+    qty = int(qty_text) if qty_text.isdigit() else CHINESE_NUMBERS.get(qty_text, 1)
+    return name, max(qty, 1)
+
+
 def db_session():
     db = SessionLocal()
     try:
@@ -157,6 +195,46 @@ class VoiceReq(BaseModel):
     list_type: ListType = ListType.personal
 
 
+OAUTH_PROVIDERS = {
+    OAuthProvider.apple: {
+        "client_id_env": "APPLE_CLIENT_ID",
+        "redirect_uri_env": "APPLE_REDIRECT_URI",
+        "scope": "name email",
+        "auth_url": "https://appleid.apple.com/auth/authorize",
+        "extra": {"response_mode": "form_post"},
+    },
+    OAuthProvider.line: {
+        "client_id_env": "LINE_CHANNEL_ID",
+        "redirect_uri_env": "LINE_REDIRECT_URI",
+        "scope": "profile openid email",
+        "auth_url": "https://access.line.me/oauth2/v2.1/authorize",
+        "extra": {},
+    },
+    OAuthProvider.google: {
+        "client_id_env": "GOOGLE_CLIENT_ID",
+        "redirect_uri_env": "GOOGLE_REDIRECT_URI",
+        "scope": "openid email profile",
+        "auth_url": "https://accounts.google.com/o/oauth2/v2/auth",
+        "extra": {"access_type": "offline", "prompt": "select_account"},
+    },
+}
+
+
+def oauth_config(provider: OAuthProvider) -> dict:
+    config = OAUTH_PROVIDERS[provider]
+    client_id = os.environ.get(config["client_id_env"], "")
+    redirect_uri = os.environ.get(config["redirect_uri_env"], "")
+    return {
+        "provider": provider.value,
+        "configured": bool(client_id and redirect_uri),
+        "client_id": client_id,
+        "redirect_uri": redirect_uri,
+        "scope": config["scope"],
+        "auth_url": config["auth_url"],
+        "extra": config["extra"],
+    }
+
+
 @app.get("/")
 def root():
     return FileResponse("app/static/index.html")
@@ -185,6 +263,39 @@ def login(payload: LoginReq, db: Session = Depends(db_session)):
     db.add(Token(token=token, user_id=user.id, expires_at=datetime.utcnow() + timedelta(days=30)))
     db.commit()
     return {"token": token, "user_id": user.id, "name": user.name}
+
+
+@app.get("/auth/oauth/config")
+def oauth_provider_config():
+    return {provider.value: {"configured": oauth_config(provider)["configured"]} for provider in OAuthProvider}
+
+
+@app.get("/auth/oauth/{provider}/start")
+def oauth_start(provider: OAuthProvider):
+    config = oauth_config(provider)
+    if not config["configured"]:
+        raise HTTPException(
+            501,
+            f"{provider.value} login is not configured. Set {OAUTH_PROVIDERS[provider]['client_id_env']} and {OAUTH_PROVIDERS[provider]['redirect_uri_env']}.",
+        )
+    params = {
+        "client_id": config["client_id"],
+        "redirect_uri": config["redirect_uri"],
+        "response_type": "code",
+        "scope": config["scope"],
+        "state": f"home_stock_{provider.value}",
+        **config["extra"],
+    }
+    return {"provider": provider.value, "authorization_url": f"{config['auth_url']}?{urlencode(params)}"}
+
+
+@app.get("/auth/oauth/{provider}/callback")
+@app.post("/auth/oauth/{provider}/callback")
+def oauth_callback(provider: OAuthProvider):
+    raise HTTPException(
+        501,
+        f"{provider.value} OAuth callback is reserved. Add provider token exchange and account linking before production login.",
+    )
 
 
 @app.post("/family/create")
@@ -259,14 +370,15 @@ def purchase(payload: PurchaseReq, user: User = Depends(get_current_user), db: S
 
 @app.post("/voice/siri")
 def siri_voice(payload: VoiceReq, user: User = Depends(get_current_user), db: Session = Depends(db_session)):
+    item_name, qty_needed = parse_voice_item(payload.phrase)
     item = ShoppingItem(
         owner_user_id=user.id if payload.list_type == ListType.personal else None,
         family_id=user.family_id if payload.list_type == ListType.family else None,
         list_type=payload.list_type,
-        name=normalize_name(payload.phrase),
-        qty_needed=1,
+        name=normalize_name(item_name),
+        qty_needed=qty_needed,
     )
     db.add(item)
     db.commit()
     db.refresh(item)
-    return {"added": item.name, "list_type": item.list_type}
+    return {"added": item.name, "list_type": item.list_type, "qty_needed": item.qty_needed}

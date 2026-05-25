@@ -2,355 +2,391 @@
 <html lang="zh-Hant">
 <head>
 	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width,initial-scale=1">
-	<title>Home Stock Assistant</title>
+	<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+	<meta name="theme-color" content="#f8faf7">
+	<title>管家</title>
 	<style>
 		:root {
-			color-scheme: dark;
-			--bg: #07111f;
-			--panel: rgba(11, 20, 36, 0.8);
-			--panel-strong: rgba(14, 27, 49, 0.92);
-			--border: rgba(138, 176, 255, 0.2);
-			--text: #edf4ff;
-			--muted: #9fb0c9;
-			--accent: #6fe0b6;
-			--accent-2: #7aa7ff;
-			--danger: #ff7d7d;
-			--shadow: 0 24px 80px rgba(0, 0, 0, 0.36);
+			color-scheme: light;
+			--bg: #f7f8f2;
+			--ink: #1b231d;
+			--muted: #687266;
+			--line: #dfe5d8;
+			--panel: #ffffff;
+			--soft: #eef4e8;
+			--primary: #2f7d4f;
+			--primary-ink: #ffffff;
+			--warn: #8a5c00;
+			--danger: #b42318;
+			--radius: 24px;
 		}
 
 		* { box-sizing: border-box; }
 		html, body { min-height: 100%; }
 		body {
 			margin: 0;
-			font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-			background:
-				radial-gradient(circle at top left, rgba(122, 167, 255, 0.18), transparent 28%),
-				radial-gradient(circle at 80% 10%, rgba(111, 224, 182, 0.12), transparent 22%),
-				linear-gradient(180deg, #05101c 0%, var(--bg) 45%, #060b14 100%);
-			color: var(--text);
+			background: var(--bg);
+			color: var(--ink);
+			font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Noto Sans TC", "Segoe UI", sans-serif;
 			-webkit-font-smoothing: antialiased;
 		}
 
-		body::before {
-			content: "";
-			position: fixed;
-			inset: 0;
-			pointer-events: none;
-			background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-			background-size: 32px 32px;
-			mask-image: linear-gradient(180deg, rgba(0,0,0,0.5), transparent 85%);
-			opacity: 0.35;
+		button, input, select {
+			font: inherit;
 		}
 
-		.wrap {
-			position: relative;
-			z-index: 1;
-			max-width: 1120px;
+		.app {
+			min-height: 100dvh;
+			max-width: 480px;
 			margin: 0 auto;
-			padding: 24px 16px 48px;
+			background: linear-gradient(180deg, #fbfcf8 0%, #f2f5ed 100%);
+			position: relative;
+			padding: max(18px, env(safe-area-inset-top)) 18px calc(88px + env(safe-area-inset-bottom));
 		}
 
-		.hero {
-			display: grid;
-			gap: 14px;
+		.topbar {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 12px;
 			margin-bottom: 18px;
 		}
 
-		.badge {
-			display: inline-flex;
-			align-items: center;
-			width: fit-content;
-			gap: 8px;
-			padding: 8px 12px;
-			border-radius: 999px;
-			color: #dffaf1;
-			background: rgba(111, 224, 182, 0.11);
-			border: 1px solid rgba(111, 224, 182, 0.24);
-			font-size: 13px;
-			letter-spacing: 0.02em;
+		.brand {
+			display: grid;
+			gap: 2px;
 		}
 
-		h1 {
-			margin: 0;
-			font-size: clamp(32px, 6vw, 54px);
-			line-height: 1.02;
-			letter-spacing: -0.04em;
+		.brand strong {
+			font-size: 28px;
+			letter-spacing: 0;
 		}
 
-		.lead {
-			margin: 0;
-			max-width: 70ch;
+		.brand span {
 			color: var(--muted);
-			font-size: 16px;
-			line-height: 1.7;
+			font-size: 13px;
 		}
 
-		.pills {
+		.icon-button {
+			width: 44px;
+			height: 44px;
+			border-radius: 50%;
+			border: 1px solid var(--line);
+			background: var(--panel);
+			color: var(--ink);
+			display: grid;
+			place-items: center;
+		}
+
+		.hero-card, .sheet, .list-card {
+			background: var(--panel);
+			border: 1px solid var(--line);
+			border-radius: var(--radius);
+			box-shadow: 0 18px 44px rgba(59, 72, 52, 0.08);
+		}
+
+		.hero-card {
+			padding: 18px;
+			display: grid;
+			gap: 14px;
+			margin-bottom: 16px;
+		}
+
+		.status-row {
 			display: flex;
 			flex-wrap: wrap;
-			gap: 10px;
-		}
-
-		.pill {
-			display: inline-flex;
-			align-items: center;
 			gap: 8px;
-			padding: 9px 12px;
+		}
+
+		.chip {
 			border-radius: 999px;
-			background: rgba(255, 255, 255, 0.05);
-			border: 1px solid rgba(255, 255, 255, 0.08);
-			color: var(--text);
-			font-size: 13px;
-			overflow: hidden;
-			text-overflow: ellipsis;
-			white-space: nowrap;
-			max-width: 100%;
+			background: var(--soft);
+			color: #35543e;
+			padding: 7px 10px;
+			font-size: 12px;
+			font-weight: 700;
 		}
 
-		.grid {
+		.quick-add {
 			display: grid;
-			grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-			gap: 16px;
-			align-items: start;
-		}
-
-		.card {
-			background: linear-gradient(180deg, rgba(18, 29, 52, 0.88), rgba(10, 18, 32, 0.86));
-			border: 1px solid var(--border);
-			border-radius: 24px;
-			box-shadow: var(--shadow);
-			backdrop-filter: blur(18px);
-			padding: 18px;
-		}
-
-		.card h2 {
-			margin: 0 0 6px;
-			font-size: 18px;
-			letter-spacing: -0.02em;
-		}
-
-		.card p {
-			margin: 0 0 14px;
-			color: var(--muted);
-			font-size: 14px;
-			line-height: 1.6;
-		}
-
-		.field-grid {
-			display: grid;
+			grid-template-columns: 1fr auto;
 			gap: 10px;
+			align-items: end;
 		}
 
 		.field {
 			display: grid;
-			gap: 6px;
+			gap: 7px;
 		}
 
-		.field label {
-			color: #d7e2f5;
-			font-size: 13px;
-			font-weight: 600;
-		}
-
-		.field small {
-			color: var(--muted);
+		label {
 			font-size: 12px;
-			line-height: 1.5;
+			font-weight: 800;
+			color: var(--muted);
 		}
 
 		input, select {
 			width: 100%;
-			border-radius: 14px;
-			border: 1px solid rgba(255, 255, 255, 0.12);
-			background: rgba(4, 10, 19, 0.78);
-			color: var(--text);
-			padding: 12px 14px;
-			font-size: 16px;
+			min-height: 48px;
+			border: 1px solid var(--line);
+			border-radius: 16px;
+			background: #fbfcfa;
+			color: var(--ink);
+			padding: 0 14px;
 			outline: none;
-			transition: border-color 140ms ease, transform 140ms ease, box-shadow 140ms ease;
 		}
 
 		input:focus, select:focus {
-			border-color: rgba(122, 167, 255, 0.7);
-			box-shadow: 0 0 0 4px rgba(122, 167, 255, 0.14);
+			border-color: #79b68b;
+			box-shadow: 0 0 0 4px rgba(47, 125, 79, 0.12);
 		}
 
-		.actions {
-			display: flex;
-			flex-wrap: wrap;
-			gap: 10px;
-			margin-top: 12px;
+		.primary, .secondary, .ghost {
+			min-height: 48px;
+			border: 0;
+			border-radius: 16px;
+			padding: 0 16px;
+			font-weight: 800;
 		}
 
-		button {
-			appearance: none;
+		.primary {
+			background: var(--primary);
+			color: var(--primary-ink);
+		}
+
+		.secondary {
+			background: #dcefe3;
+			color: #174c2d;
+		}
+
+		.ghost {
+			background: #f3f5ef;
+			color: var(--ink);
+			border: 1px solid var(--line);
+		}
+
+		.tabs {
+			display: grid;
+			grid-template-columns: repeat(2, 1fr);
+			background: #e9eee2;
+			border-radius: 18px;
+			padding: 4px;
+			margin: 12px 0 16px;
+		}
+
+		.tab {
 			border: 0;
 			border-radius: 14px;
-			padding: 12px 16px;
-			font-size: 15px;
-			font-weight: 700;
-			color: #04121f;
-			background: linear-gradient(135deg, var(--accent), #93f0cf);
-			cursor: pointer;
-			transition: transform 140ms ease, box-shadow 140ms ease, opacity 140ms ease;
-			box-shadow: 0 10px 22px rgba(111, 224, 182, 0.18);
+			min-height: 40px;
+			background: transparent;
+			color: var(--muted);
+			font-weight: 800;
 		}
 
-		button.secondary {
-			background: linear-gradient(135deg, #f0f4ff, #cedcff);
-			box-shadow: 0 10px 22px rgba(124, 162, 255, 0.16);
+		.tab.active {
+			background: var(--panel);
+			color: var(--ink);
+			box-shadow: 0 8px 20px rgba(70, 84, 61, 0.1);
 		}
 
-		button.ghost {
-			background: rgba(255, 255, 255, 0.08);
-			color: var(--text);
-			border: 1px solid rgba(255, 255, 255, 0.1);
-			box-shadow: none;
-		}
-
-		button.danger {
-			background: linear-gradient(135deg, #ffb3b3, #ff7d7d);
-			box-shadow: 0 10px 22px rgba(255, 125, 125, 0.16);
-		}
-
-		button:hover:not(:disabled) {
-			transform: translateY(-1px);
-		}
-
-		button:disabled {
-			opacity: 0.45;
-			cursor: not-allowed;
-			transform: none;
-			box-shadow: none;
-		}
-
-		.status {
-			margin-top: 14px;
-			padding: 12px 14px;
-			border-radius: 14px;
-			border: 1px solid rgba(255, 255, 255, 0.1);
-			background: rgba(255, 255, 255, 0.04);
-			color: var(--text);
-			font-size: 14px;
-			line-height: 1.55;
-			min-height: 48px;
-			white-space: pre-wrap;
-		}
-
-		.status.ok {
-			border-color: rgba(111, 224, 182, 0.3);
-			background: rgba(111, 224, 182, 0.1);
-		}
-
-		.status.warn {
-			border-color: rgba(255, 203, 107, 0.3);
-			background: rgba(255, 203, 107, 0.1);
-		}
-
-		.status.error {
-			border-color: rgba(255, 125, 125, 0.3);
-			background: rgba(255, 125, 125, 0.1);
-		}
-
-		.lists {
+		.list-card {
+			padding: 16px;
 			display: grid;
-			grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-			gap: 14px;
+			gap: 12px;
+			margin-bottom: 16px;
 		}
 
-		.list {
-			background: rgba(255, 255, 255, 0.04);
-			border: 1px solid rgba(255, 255, 255, 0.08);
-			border-radius: 18px;
-			padding: 14px;
-			min-height: 180px;
+		.list-title {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			gap: 12px;
 		}
 
-		.list h3 {
-			margin: 0 0 10px;
-			font-size: 16px;
+		.list-title h2 {
+			margin: 0;
+			font-size: 18px;
 		}
 
 		.item {
-			display: grid;
-			gap: 4px;
-			padding: 12px 0;
-			border-top: 1px solid rgba(255, 255, 255, 0.08);
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 12px;
+			padding: 14px 0;
+			border-top: 1px solid var(--line);
 		}
 
-		.item:first-of-type {
-			border-top: 0;
-			padding-top: 0;
-		}
+		.item:first-child { border-top: 0; }
+		.item strong { display: block; font-size: 16px; }
+		.item span { color: var(--muted); font-size: 13px; }
 
-		.item strong {
-			font-size: 15px;
-		}
-
-		.item span {
+		.empty, .message {
 			color: var(--muted);
-			font-size: 13px;
-		}
-
-		.empty {
-			color: var(--muted);
+			line-height: 1.5;
 			font-size: 14px;
-			line-height: 1.6;
 		}
 
-		.footer-note {
-			margin-top: 16px;
+		.message {
+			background: #fff8e8;
+			border: 1px solid #f0dcae;
+			color: var(--warn);
+			border-radius: 16px;
+			padding: 12px;
+		}
+
+		.message.error {
+			background: #fff0ee;
+			border-color: #ffd1cc;
+			color: var(--danger);
+		}
+
+		.message.ok {
+			background: #eef9f1;
+			border-color: #c9ebd2;
+			color: #27633f;
+		}
+
+		.sheet {
+			padding: 16px;
+			display: grid;
+			gap: 12px;
+		}
+
+		.sheet h2 {
+			margin: 0;
+			font-size: 17px;
+		}
+
+		.form-grid {
+			display: grid;
+			gap: 10px;
+		}
+
+		.actions {
+			display: grid;
+			grid-template-columns: repeat(2, 1fr);
+			gap: 10px;
+		}
+
+		.social-grid {
+			display: grid;
+			grid-template-columns: repeat(3, 1fr);
+			gap: 8px;
+		}
+
+		.social-grid button {
+			min-height: 44px;
+			border-radius: 14px;
+			border: 1px solid var(--line);
+			background: #fbfcfa;
+			font-weight: 800;
+		}
+
+		.nav {
+			position: fixed;
+			left: 50%;
+			bottom: 0;
+			transform: translateX(-50%);
+			width: min(480px, 100%);
+			padding: 10px 18px calc(10px + env(safe-area-inset-bottom));
+			background: rgba(251, 252, 248, 0.92);
+			backdrop-filter: blur(18px);
+			border-top: 1px solid var(--line);
+			display: grid;
+			grid-template-columns: repeat(3, 1fr);
+			gap: 8px;
+		}
+
+		.nav button {
+			border: 0;
+			border-radius: 16px;
+			background: transparent;
+			min-height: 48px;
 			color: var(--muted);
-			font-size: 13px;
-			line-height: 1.6;
+			font-weight: 800;
 		}
 
-		@media (max-width: 640px) {
-			.wrap { padding-top: 18px; }
-			.card { border-radius: 20px; padding: 16px; }
-			input, select, button { font-size: 15px; }
+		.nav button.active {
+			background: var(--soft);
+			color: var(--primary);
 		}
+
+		.view { display: none; }
+		.view.active { display: block; }
 	</style>
 </head>
 <body>
-	<main class="wrap">
-		<section class="hero">
-			<span class="badge">手機可直接操作的 Home Stock Assistant</span>
-			<h1>Home Stock Assistant</h1>
-			<p class="lead">這是一個可在手機瀏覽器直接使用的購物清單 MVP。預設連到你目前的 Render 服務，不需要本機架設，也不需要另外跑 Flutter。</p>
-			<div class="pills">
-				<span class="pill" id="apiPill">API: 讀取中</span>
-				<span class="pill" id="authPill">狀態: 未登入</span>
-				<span class="pill" id="familyPill">家庭: 未加入</span>
+	<main class="app">
+		<header class="topbar">
+			<div class="brand">
+				<strong>管家</strong>
+				<span>Home Stock Assistant</span>
+			</div>
+			<button class="icon-button" id="refreshBtn" type="button" aria-label="刷新">↻</button>
+		</header>
+
+		<section class="view active" id="homeView">
+			<div class="hero-card">
+				<div class="status-row">
+					<span class="chip" id="authChip">未登入</span>
+					<span class="chip" id="familyChip">未加入家庭</span>
+					<span class="chip" id="apiChip">API 檢查中</span>
+				</div>
+				<div class="quick-add">
+					<div class="field">
+						<label for="itemNameInput">快速新增</label>
+						<input id="itemNameInput" type="text" placeholder="例如：牛奶 2 個" autocomplete="off">
+					</div>
+					<button class="primary" id="quickAddBtn" type="button">加入</button>
+				</div>
+				<div class="field">
+					<label for="listTypeInput">清單</label>
+					<select id="listTypeInput">
+						<option value="personal">個人</option>
+						<option value="family">家用</option>
+					</select>
+				</div>
+				<div class="message" id="statusBox">請先登入，之後可用 Siri 捷徑呼叫語音加入。</div>
+			</div>
+
+			<div class="tabs">
+				<button class="tab active" id="personalTab" type="button">個人</button>
+				<button class="tab" id="familyTab" type="button">家用</button>
+			</div>
+
+			<section class="list-card">
+				<div class="list-title">
+					<h2 id="listTitle">個人清單</h2>
+					<button class="ghost" id="buyBtn" type="button">買好了</button>
+				</div>
+				<div id="currentList" class="empty">尚未載入。</div>
+			</section>
+		</section>
+
+		<section class="view" id="voiceView">
+			<div class="sheet">
+				<h2>語音助手</h2>
+				<div class="message ok">iOS 捷徑可以 POST 到 <strong>/voice/siri</strong>，Header 帶 Bearer token，Body 帶 phrase 與 list_type。</div>
+				<div class="field">
+					<label for="voiceInput">模擬 Siri 聽到的內容</label>
+					<input id="voiceInput" type="text" placeholder="幫我在管家紀錄要買牛奶 2 個">
+				</div>
+				<button class="primary" id="voiceBtn" type="button">語音加入</button>
 			</div>
 		</section>
 
-		<div class="grid">
-			<section class="card">
-				<h2>連線設定</h2>
-				<p>預設會使用目前頁面的網址作為 API 基礎路徑。若你想改成其他 Render 網址，可以直接覆蓋。</p>
-				<div class="field-grid">
-					<div class="field">
-						<label for="apiBaseUrl">API Base URL</label>
-						<input id="apiBaseUrl" type="url" placeholder="https://home-stock-api-grzn.onrender.com">
-						<small>建議保留同網域，這樣手機打開頁面後就能直接操作。</small>
-					</div>
+		<section class="view" id="accountView">
+			<div class="sheet">
+				<h2>登入</h2>
+				<div class="social-grid">
+					<button data-provider="apple" type="button">Apple</button>
+					<button data-provider="line" type="button">LINE</button>
+					<button data-provider="google" type="button">Google</button>
 				</div>
-				<div class="actions">
-					<button class="secondary" id="saveApiBtn" type="button">儲存 API 位址</button>
-					<button class="ghost" id="reloadBtn" type="button">重新載入清單</button>
-					<button class="ghost" id="clearBtn" type="button">清除本機登入</button>
-				</div>
-				<div class="status" id="statusBox">準備連線中。</div>
-			</section>
-
-			<section class="card">
-				<h2>註冊 / 登入</h2>
-				<p>先註冊一次，再登入取得 token。登入後就能新增項目、建立家庭與刷新清單。</p>
-				<div class="field-grid">
+				<div class="form-grid">
 					<div class="field">
-						<label for="nameInput">Name</label>
+						<label for="nameInput">姓名</label>
 						<input id="nameInput" type="text" placeholder="註冊用姓名">
 					</div>
 					<div class="field">
@@ -358,87 +394,41 @@
 						<input id="emailInput" type="email" placeholder="you@example.com">
 					</div>
 					<div class="field">
-						<label for="passwordInput">Password</label>
+						<label for="passwordInput">密碼</label>
 						<input id="passwordInput" type="password" placeholder="至少 4 碼">
 					</div>
 				</div>
 				<div class="actions">
-					<button id="registerBtn" type="button">註冊</button>
-					<button class="secondary" id="loginBtn" type="button">登入</button>
+					<button class="secondary" id="registerBtn" type="button">註冊</button>
+					<button class="primary" id="loginBtn" type="button">登入</button>
 				</div>
-			</section>
+				<button class="ghost" id="clearBtn" type="button">清除本機登入</button>
+			</div>
 
-			<section class="card">
-				<h2>家庭管理</h2>
-				<p>建立家庭後才能把家用清單分給多人一起使用。</p>
-				<div class="field-grid">
+			<div class="sheet" style="margin-top:16px">
+				<h2>家庭</h2>
+				<div class="form-grid">
 					<div class="field">
 						<label for="familyNameInput">家庭名稱</label>
 						<input id="familyNameInput" type="text" placeholder="例如：王家">
 					</div>
 					<div class="field">
-						<label for="memberEmailInput">加入家人 Email</label>
+						<label for="memberEmailInput">家人 Email</label>
 						<input id="memberEmailInput" type="email" placeholder="家人帳號 email">
 					</div>
 				</div>
 				<div class="actions">
-					<button id="createFamilyBtn" type="button">建立家庭</button>
-					<button class="secondary" id="addMemberBtn" type="button">加入家人</button>
+					<button class="secondary" id="createFamilyBtn" type="button">建立家庭</button>
+					<button class="ghost" id="addMemberBtn" type="button">加入家人</button>
 				</div>
-			</section>
+			</div>
+		</section>
 
-			<section class="card">
-				<h2>購物清單</h2>
-				<p>加入個人或家用清單，或直接用購買按鈕模擬扣除。語音項目也可直接寫入清單。</p>
-				<div class="field-grid">
-					<div class="field">
-						<label for="itemNameInput">品項名稱</label>
-						<input id="itemNameInput" type="text" placeholder="阿猴鮮奶 / 蘋果 / 牛奶">
-					</div>
-					<div class="field">
-						<label for="qtyInput">數量</label>
-						<input id="qtyInput" type="number" min="1" value="1">
-					</div>
-					<div class="field">
-						<label for="listTypeInput">清單類型</label>
-						<select id="listTypeInput">
-							<option value="personal">個人</option>
-							<option value="family">家用</option>
-						</select>
-					</div>
-					<div class="field">
-						<label for="voiceInput">Siri 語音內容</label>
-						<input id="voiceInput" type="text" placeholder="阿猴鮮奶">
-					</div>
-				</div>
-				<div class="actions">
-					<button id="addItemBtn" type="button">新增到清單</button>
-					<button class="secondary" id="buyBtn" type="button">模擬購買</button>
-					<button class="ghost" id="voiceBtn" type="button">語音加入</button>
-				</div>
-			</section>
-
-			<section class="card" style="grid-column: 1 / -1;">
-				<h2>目前清單</h2>
-				<p>登入後按重新載入清單，就能看到個人與家用待購項目。</p>
-				<div class="actions">
-					<button id="refreshBtn" type="button">刷新清單</button>
-				</div>
-				<div class="lists">
-					<div class="list">
-						<h3>Personal</h3>
-						<div id="personalList" class="empty">尚未載入。</div>
-					</div>
-					<div class="list">
-						<h3>Family</h3>
-						<div id="familyList" class="empty">尚未載入。</div>
-					</div>
-				</div>
-				<div class="footer-note">
-					提示：手機直接開這個 Render 網址即可完成整個流程，不需要另外啟動本機服務。
-				</div>
-			</section>
-		</div>
+		<nav class="nav" aria-label="主要導覽">
+			<button class="active" data-view="homeView" type="button">清單</button>
+			<button data-view="voiceView" type="button">語音</button>
+			<button data-view="accountView" type="button">帳號</button>
+		</nav>
 	</main>
 
 	<script>
@@ -446,235 +436,151 @@
 			apiBaseUrl: localStorage.getItem('apiBaseUrl') || window.location.origin,
 			token: localStorage.getItem('token') || '',
 			email: localStorage.getItem('email') || '',
-			familyId: localStorage.getItem('familyId') || '',
-			familyName: localStorage.getItem('familyName') || ''
+			familyName: localStorage.getItem('familyName') || '',
+			activeList: localStorage.getItem('activeList') || 'personal',
+			items: { personal: [], family: [] },
 		};
 
 		const el = (id) => document.getElementById(id);
-		const apiBaseUrlInput = el('apiBaseUrl');
-		const apiPill = el('apiPill');
-		const authPill = el('authPill');
-		const familyPill = el('familyPill');
 		const statusBox = el('statusBox');
-		const personalList = el('personalList');
-		const familyList = el('familyList');
-
-		apiBaseUrlInput.value = state.apiBaseUrl;
-
-		function cleanBaseUrl(value) {
-			return (value || '').trim().replace(/\/+$/, '') || window.location.origin;
-		}
-
-		function apiBaseUrl() {
-			return cleanBaseUrl(apiBaseUrlInput.value);
-		}
 
 		function setStatus(message, tone = '') {
-			statusBox.className = 'status' + (tone ? ' ' + tone : '');
+			statusBox.className = 'message' + (tone ? ' ' + tone : '');
 			statusBox.textContent = message;
 		}
 
-		function renderPills() {
-			apiPill.textContent = 'API: ' + apiBaseUrl();
-			authPill.textContent = state.token ? '狀態: 已登入 ' + state.email : '狀態: 未登入';
-			familyPill.textContent = state.familyName ? '家庭: ' + state.familyName : '家庭: 未加入';
+		function cleanNameAndQty(value) {
+			const text = value.trim();
+			const match = text.match(/(.+?)(?:\s*(\d+)\s*(?:個|瓶|包|盒|袋)?)?$/);
+			return { name: (match && match[1] ? match[1] : text).trim(), qty: Number(match && match[2] ? match[2] : 1) };
 		}
 
-		function authHeaders() {
-			return state.token ? { Authorization: 'Bearer ' + state.token } : {};
+		function headers(hasBody = false) {
+			const output = {};
+			if (hasBody) output['Content-Type'] = 'application/json';
+			if (state.token) output.Authorization = 'Bearer ' + state.token;
+			return output;
 		}
 
 		async function request(path, options = {}) {
-			const headers = Object.assign({}, options.headers || {});
-			if (options.body && !headers['Content-Type']) {
-				headers['Content-Type'] = 'application/json';
-			}
-			Object.assign(headers, authHeaders());
-
-			const response = await fetch(apiBaseUrl() + path, {
-				...options,
-				headers,
-			});
-
+			const response = await fetch(state.apiBaseUrl + path, options);
 			const text = await response.text();
-			let data = {};
-			if (text) {
-				try {
-					data = JSON.parse(text);
-				} catch (error) {
-					data = text;
-				}
-			}
-
-			if (!response.ok) {
-				const detail = data && typeof data === 'object' && 'detail' in data ? data.detail : (typeof data === 'string' ? data : 'Request failed');
-				throw new Error(detail || ('HTTP ' + response.status));
-			}
-
+			const data = text ? JSON.parse(text) : {};
+			if (!response.ok) throw new Error(data.detail || 'HTTP ' + response.status);
 			return data;
 		}
 
-		function renderItems(listElement, items, emptyText) {
-			if (!items || items.length === 0) {
-				listElement.className = 'empty';
-				listElement.textContent = emptyText;
+		function updateChrome() {
+			el('authChip').textContent = state.token ? '已登入 ' + state.email : '未登入';
+			el('familyChip').textContent = state.familyName ? state.familyName : '未加入家庭';
+			el('apiChip').textContent = new URL(state.apiBaseUrl).host;
+			el('personalTab').classList.toggle('active', state.activeList === 'personal');
+			el('familyTab').classList.toggle('active', state.activeList === 'family');
+			el('listTitle').textContent = state.activeList === 'personal' ? '個人清單' : '家用清單';
+			el('listTypeInput').value = state.activeList;
+		}
+
+		function renderList() {
+			updateChrome();
+			const target = el('currentList');
+			const rows = state.items[state.activeList] || [];
+			if (!state.token) {
+				target.className = 'empty';
+				target.textContent = '請到帳號頁登入。';
 				return;
 			}
-
-			listElement.className = '';
-			listElement.innerHTML = items.map((item) => `
+			if (!rows.length) {
+				target.className = 'empty';
+				target.textContent = state.activeList === 'personal' ? '個人清單目前是空的。' : '家用清單目前是空的。';
+				return;
+			}
+			target.className = '';
+			target.innerHTML = rows.map((item) => `
 				<div class="item">
-					<strong>${escapeHtml(item.name)}</strong>
-					<span>數量：${item.qty_needed}</span>
-					<span>ID：${item.id}</span>
+					<div><strong>${escapeHtml(item.name)}</strong><span>數量 ${item.qty_needed}</span></div>
+					<span>#${item.id}</span>
 				</div>
 			`).join('');
 		}
 
 		function escapeHtml(value) {
-			return String(value)
-				.replaceAll('&', '&amp;')
-				.replaceAll('<', '&lt;')
-				.replaceAll('>', '&gt;')
-				.replaceAll('"', '&quot;')
-				.replaceAll("'", '&#39;');
+			return String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
 		}
 
 		async function refreshItems() {
 			if (!state.token) {
-				setStatus('請先登入，才可以刷新清單。', 'warn');
-				renderItems(personalList, [], '請先登入。');
-				renderItems(familyList, [], '請先登入。');
+				renderList();
+				setStatus('請先登入，之後可新增個人與家用清單。');
 				return;
 			}
-
-			setStatus('正在載入清單...', '');
 			try {
-				const data = await request('/items/me');
-				renderItems(personalList, data.personal || [], '個人清單目前是空的。');
-				renderItems(familyList, data.family || [], '家用清單目前是空的。');
+				const data = await request('/items/me', { headers: headers() });
+				state.items = { personal: data.personal || [], family: data.family || [] };
+				renderList();
 				setStatus('清單已更新。', 'ok');
 			} catch (error) {
-				setStatus('載入清單失敗：' + error.message, 'error');
+				setStatus('讀取失敗：' + error.message, 'error');
 			}
-			renderPills();
 		}
 
 		async function register() {
-			setStatus('正在註冊...', '');
 			try {
 				const data = await request('/auth/register', {
 					method: 'POST',
-					body: JSON.stringify({
-						name: el('nameInput').value.trim(),
-						email: el('emailInput').value.trim(),
-						password: el('passwordInput').value,
-					}),
+					headers: headers(true),
+					body: JSON.stringify({ name: el('nameInput').value.trim(), email: el('emailInput').value.trim(), password: el('passwordInput').value }),
 				});
-				setStatus('註冊成功，user_id = ' + data.user_id + '。現在可直接登入。', 'ok');
+				setStatus('註冊成功，user_id = ' + data.user_id + '。', 'ok');
 			} catch (error) {
 				setStatus('註冊失敗：' + error.message, 'error');
 			}
 		}
 
 		async function login() {
-			setStatus('正在登入...', '');
 			try {
+				const email = el('emailInput').value.trim();
 				const data = await request('/auth/login', {
 					method: 'POST',
-					body: JSON.stringify({
-						email: el('emailInput').value.trim(),
-						password: el('passwordInput').value,
-					}),
+					headers: headers(true),
+					body: JSON.stringify({ email, password: el('passwordInput').value }),
 				});
 				state.token = data.token;
-				state.email = el('emailInput').value.trim();
+				state.email = email;
 				localStorage.setItem('token', state.token);
 				localStorage.setItem('email', state.email);
-				setStatus('登入成功。', 'ok');
-				renderPills();
 				await refreshItems();
 			} catch (error) {
 				setStatus('登入失敗：' + error.message, 'error');
 			}
 		}
 
-		async function createFamily() {
-			if (!state.token) {
-				setStatus('請先登入再建立家庭。', 'warn');
-				return;
-			}
-			setStatus('正在建立家庭...', '');
-			try {
-				const data = await request('/family/create', {
-					method: 'POST',
-					body: JSON.stringify({ name: el('familyNameInput').value.trim() }),
-				});
-				state.familyId = String(data.family_id);
-				state.familyName = data.name;
-				localStorage.setItem('familyId', state.familyId);
-				localStorage.setItem('familyName', state.familyName);
-				setStatus('家庭建立成功：' + data.name, 'ok');
-				renderPills();
-			} catch (error) {
-				setStatus('建立家庭失敗：' + error.message, 'error');
-			}
-		}
-
-		async function addMember() {
-			if (!state.token) {
-				setStatus('請先登入再加入家人。', 'warn');
-				return;
-			}
-			setStatus('正在加入家人...', '');
-			try {
-				const data = await request('/family/add-member', {
-					method: 'POST',
-					body: JSON.stringify({ member_email: el('memberEmailInput').value.trim() }),
-				});
-				setStatus('已加入家人，family_id = ' + data.family_id, 'ok');
-			} catch (error) {
-				setStatus('加入家人失敗：' + error.message, 'error');
-			}
-		}
-
 		async function addItem() {
-			if (!state.token) {
-				setStatus('請先登入再新增清單。', 'warn');
-				return;
-			}
-			setStatus('正在新增項目...', '');
+			if (!state.token) return setStatus('請先登入。');
+			const parsed = cleanNameAndQty(el('itemNameInput').value);
+			if (!parsed.name) return setStatus('請輸入品項。');
 			try {
-				const data = await request('/items', {
+				await request('/items', {
 					method: 'POST',
-					body: JSON.stringify({
-						name: el('itemNameInput').value.trim(),
-						qty_needed: Number(el('qtyInput').value || 1),
-						list_type: el('listTypeInput').value,
-					}),
+					headers: headers(true),
+					body: JSON.stringify({ name: parsed.name, qty_needed: parsed.qty, list_type: state.activeList }),
 				});
-				setStatus('已新增：' + data.name, 'ok');
+				el('itemNameInput').value = '';
 				await refreshItems();
 			} catch (error) {
 				setStatus('新增失敗：' + error.message, 'error');
 			}
 		}
 
-		async function purchaseItem() {
-			if (!state.token) {
-				setStatus('請先登入再執行購買。', 'warn');
-				return;
-			}
-			setStatus('正在扣除數量...', '');
+		async function buyItem() {
+			if (!state.token) return setStatus('請先登入。');
+			const parsed = cleanNameAndQty(el('itemNameInput').value);
+			if (!parsed.name) return setStatus('請輸入要扣除的品項。');
 			try {
-				const data = await request('/purchase', {
+				await request('/purchase', {
 					method: 'POST',
-					body: JSON.stringify({
-						item_name: el('itemNameInput').value.trim(),
-						for_list_type: el('listTypeInput').value,
-					}),
+					headers: headers(true),
+					body: JSON.stringify({ item_name: parsed.name, for_list_type: state.activeList }),
 				});
-				setStatus('購買完成，剩餘數量：' + data.remaining, 'ok');
 				await refreshItems();
 			} catch (error) {
 				setStatus('購買失敗：' + error.message, 'error');
@@ -682,80 +588,97 @@
 		}
 
 		async function voiceAdd() {
-			if (!state.token) {
-				setStatus('請先登入再使用語音加入。', 'warn');
-				return;
-			}
+			if (!state.token) return setStatus('請先登入。');
 			const phrase = el('voiceInput').value.trim();
-			if (!phrase) {
-				setStatus('請先輸入語音內容。', 'warn');
-				return;
-			}
-			setStatus('正在寫入語音項目...', '');
+			if (!phrase) return setStatus('請輸入語音內容。');
 			try {
-				const data = await request('/voice/siri', {
+				await request('/voice/siri', {
 					method: 'POST',
-					body: JSON.stringify({
-						phrase,
-						list_type: el('listTypeInput').value,
-					}),
+					headers: headers(true),
+					body: JSON.stringify({ phrase, list_type: state.activeList }),
 				});
-				setStatus('已加入語音項目：' + data.added, 'ok');
+				el('voiceInput').value = '';
 				await refreshItems();
 			} catch (error) {
 				setStatus('語音加入失敗：' + error.message, 'error');
 			}
 		}
 
-		function clearLocalAuth() {
+		async function createFamily() {
+			if (!state.token) return setStatus('請先登入。');
+			try {
+				const data = await request('/family/create', {
+					method: 'POST',
+					headers: headers(true),
+					body: JSON.stringify({ name: el('familyNameInput').value.trim() }),
+				});
+				state.familyName = data.name;
+				localStorage.setItem('familyName', state.familyName);
+				updateChrome();
+				setStatus('家庭已建立：' + data.name, 'ok');
+			} catch (error) {
+				setStatus('建立家庭失敗：' + error.message, 'error');
+			}
+		}
+
+		async function addMember() {
+			if (!state.token) return setStatus('請先登入。');
+			try {
+				await request('/family/add-member', {
+					method: 'POST',
+					headers: headers(true),
+					body: JSON.stringify({ member_email: el('memberEmailInput').value.trim() }),
+				});
+				setStatus('已加入家人。', 'ok');
+			} catch (error) {
+				setStatus('加入家人失敗：' + error.message, 'error');
+			}
+		}
+
+		async function socialLogin(provider) {
+			try {
+				const data = await request('/auth/oauth/' + provider + '/start');
+				window.location.href = data.authorization_url;
+			} catch (error) {
+				setStatus(provider + ' 登入尚未啟用：請先在 Render 設定對應 OAuth client id 與 redirect uri。', 'error');
+			}
+		}
+
+		function clearAuth() {
 			state.token = '';
 			state.email = '';
-			state.familyId = '';
 			state.familyName = '';
 			localStorage.removeItem('token');
 			localStorage.removeItem('email');
-			localStorage.removeItem('familyId');
 			localStorage.removeItem('familyName');
-			renderPills();
-			renderItems(personalList, [], '請先登入。');
-			renderItems(familyList, [], '請先登入。');
-			setStatus('已清除本機登入狀態。', 'ok');
+			state.items = { personal: [], family: [] };
+			renderList();
+			setStatus('已清除本機登入。', 'ok');
 		}
 
-		function saveApiUrl() {
-			const value = cleanBaseUrl(apiBaseUrlInput.value);
-			apiBaseUrlInput.value = value;
-			localStorage.setItem('apiBaseUrl', value);
-			setStatus('已儲存 API 位址：' + value, 'ok');
-			renderPills();
-		}
+		document.querySelectorAll('[data-view]').forEach((button) => {
+			button.addEventListener('click', () => {
+				document.querySelectorAll('[data-view]').forEach((nav) => nav.classList.toggle('active', nav === button));
+				document.querySelectorAll('.view').forEach((view) => view.classList.toggle('active', view.id === button.dataset.view));
+			});
+		});
+		document.querySelectorAll('[data-provider]').forEach((button) => button.addEventListener('click', () => socialLogin(button.dataset.provider)));
 
-		el('saveApiBtn').addEventListener('click', saveApiUrl);
-		el('reloadBtn').addEventListener('click', refreshItems);
-		el('clearBtn').addEventListener('click', clearLocalAuth);
+		el('personalTab').addEventListener('click', () => { state.activeList = 'personal'; localStorage.setItem('activeList', state.activeList); renderList(); });
+		el('familyTab').addEventListener('click', () => { state.activeList = 'family'; localStorage.setItem('activeList', state.activeList); renderList(); });
+		el('listTypeInput').addEventListener('change', () => { state.activeList = el('listTypeInput').value; localStorage.setItem('activeList', state.activeList); renderList(); });
+		el('refreshBtn').addEventListener('click', refreshItems);
+		el('quickAddBtn').addEventListener('click', addItem);
+		el('buyBtn').addEventListener('click', buyItem);
+		el('voiceBtn').addEventListener('click', voiceAdd);
 		el('registerBtn').addEventListener('click', register);
 		el('loginBtn').addEventListener('click', login);
+		el('clearBtn').addEventListener('click', clearAuth);
 		el('createFamilyBtn').addEventListener('click', createFamily);
 		el('addMemberBtn').addEventListener('click', addMember);
-		el('addItemBtn').addEventListener('click', addItem);
-		el('buyBtn').addEventListener('click', purchaseItem);
-		el('voiceBtn').addEventListener('click', voiceAdd);
-		el('refreshBtn').addEventListener('click', refreshItems);
 
-		apiBaseUrlInput.addEventListener('change', () => {
-			localStorage.setItem('apiBaseUrl', cleanBaseUrl(apiBaseUrlInput.value));
-			renderPills();
-		});
-
-		renderPills();
-		if (state.token) {
-			setStatus('已恢復本機登入狀態，按刷新清單即可查看。', 'ok');
-			refreshItems();
-		} else {
-			renderItems(personalList, [], '請先登入。');
-			renderItems(familyList, [], '請先登入。');
-			setStatus('請先註冊並登入，然後就能直接在手機瀏覽器使用。', 'warn');
-		}
+		updateChrome();
+		refreshItems();
 	</script>
 </body>
 </html>
