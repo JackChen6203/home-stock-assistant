@@ -16,10 +16,10 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
 ## 手機測試
-1. 手機與電腦在同一 Wi‑Fi。
-2. 手機開 `http://<電腦IP>:8000/`（簡易 App 入口）或 `http://<電腦IP>:8000/docs`（Swagger）。
-3. 先 `POST /auth/register`、`POST /auth/login`，複製 token。
-4. 在 Swagger 右上角 Authorize（Bearer token）後測以下流程。
+1. 安裝 Flutter App 到手機，並把 API_BASE_URL 指向 Render，例如 `https://home-stock-api.onrender.com`。
+2. 啟動時可用 `flutter run --dart-define=API_BASE_URL=https://home-stock-api.onrender.com`。
+3. 先註冊再登入，登入成功後再新增個人清單與家用清單。
+4. 如果你的 Render 網址不是這個網域，直接改成實際網址即可。
 
 ## 測試流程（對應你的需求）
 1. 建立主使用者 A、家人 B。
