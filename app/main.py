@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import os
-import secrets
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Optional
@@ -14,17 +12,6 @@ from pydantic import BaseModel, Field
 from sqlalchemy import DateTime, Enum as SAEnum, ForeignKey, Integer, String, create_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship, sessionmaker
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./home_stock.db")
-if DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
-
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {},
-    pool_pre_ping=True,
-)
-SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
-
 app = FastAPI(title="Home Stock Assistant MVP")
 app.add_middleware(
     CORSMiddleware,
@@ -33,6 +20,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+engine = create_engine("sqlite:///./home_stock.db", connect_args={"check_same_thread": False})
+SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 
 class Base(DeclarativeBase):
@@ -168,11 +158,6 @@ def root():
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 
-@app.get("/health")
-def health():
-    return {"status": "ok", "db": "connected"}
-
-
 @app.post("/auth/register")
 def register(payload: RegisterReq, db: Session = Depends(db_session)):
     if db.query(User).filter(User.email == payload.email).first():
@@ -189,7 +174,7 @@ def login(payload: LoginReq, db: Session = Depends(db_session)):
     user = db.query(User).filter(User.email == payload.email, User.password == payload.password).first()
     if not user:
         raise HTTPException(401, "Login failed")
-    token = f"tk_{user.id}_{secrets.token_hex(8)}"
+    token = f"tk_{user.id}_{int(datetime.utcnow().timestamp())}"
     db.add(Token(token=token, user_id=user.id, expires_at=datetime.utcnow() + timedelta(days=30)))
     db.commit()
     return {"token": token, "user_id": user.id, "name": user.name}
@@ -220,8 +205,6 @@ def add_member(payload: InviteReq, user: User = Depends(get_current_user), db: S
 
 @app.post("/items")
 def create_item(payload: ItemCreateReq, user: User = Depends(get_current_user), db: Session = Depends(db_session)):
-    if payload.list_type == ListType.family and not user.family_id:
-        raise HTTPException(400, "No family")
     item = ShoppingItem(
         owner_user_id=user.id if payload.list_type == ListType.personal else None,
         family_id=user.family_id if payload.list_type == ListType.family else None,
@@ -269,8 +252,6 @@ def purchase(payload: PurchaseReq, user: User = Depends(get_current_user), db: S
 
 @app.post("/voice/siri")
 def siri_voice(payload: VoiceReq, user: User = Depends(get_current_user), db: Session = Depends(db_session)):
-    if payload.list_type == ListType.family and not user.family_id:
-        raise HTTPException(400, "No family")
     item = ShoppingItem(
         owner_user_id=user.id if payload.list_type == ListType.personal else None,
         family_id=user.family_id if payload.list_type == ListType.family else None,
