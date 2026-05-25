@@ -12,6 +12,8 @@ from pydantic import BaseModel, Field
 from sqlalchemy import DateTime, Enum as SAEnum, ForeignKey, Integer, String, create_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship, sessionmaker
 
+import os
+
 app = FastAPI(title="Home Stock Assistant MVP")
 app.add_middleware(
     CORSMiddleware,
@@ -21,7 +23,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-engine = create_engine("sqlite:///./home_stock.db", connect_args={"check_same_thread": False})
+DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./home_stock.db")
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {})
+
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 
